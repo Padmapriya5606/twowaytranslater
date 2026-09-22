@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ISL Two-Way Translator — Real-Time Indian Sign Language AI</title>
+  <meta name="description" content="State-of-the-art Neural Indian Sign Language ↔ Speech Two-Way Translator with real-time gesture recognition, Transformer NLP, and 3D animated sign avatar.">
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- MediaPipe Camera & Holistic scripts for real-time tracking -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="theme-dark">
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-left">
+      <div class="brand-logo">
+        <div class="logo-icon">
+          <i class="fa-solid fa-hands-asl-interpreting"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">ISL <span class="gradient-text">Sync</span></span>
+          <span class="brand-sub">Neural Two-Way Translator</span>
+        </div>
+      </div>
+      
+      <div class="dialect-badge">
+        <i class="fa-solid fa-earth-asia"></i>
+        <select id="dialectSelect" class="dialect-select" title="Select Regional ISL Dialect">
+          <option value="generic">ISL Generic (Standard)</option>
+          <option value="south">South Indian ISL</option>
+          <option value="north">North Indian ISL</option>
+          <option value="maharashtra">Maharashtra ISL</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Center Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="dual-room">
+        <i class="fa-solid fa-arrows-split-up-and-left"></i>
+        <span>Two-Way Room</span>
+      </button>
+      <button class="nav-tab" data-tab="signer-studio">
+        <i class="fa-solid fa-video"></i>
+        <span>Signer Studio</span>
+      </button>
+      <button class="nav-tab" data-tab="avatar-studio">
+        <i class="fa-solid fa-person-burst"></i>
+        <span>Avatar Studio</span>
+      </button>
+      <button class="nav-tab" data-tab="dictionary-hub">
+        <i class="fa-solid fa-book-bookmark"></i>
+        <span>ISL Dictionary</span>
+      </button>
+    </nav>
+
+    <!-- Right Controls: Profile / Accessibility Mode & Settings -->
+    <div class="nav-right">
+      <div class="system-status online" id="systemStatusBadge" title="AI Inference Engine Online">
+        <span class="status-dot"></span>
+        <span class="status-label">AI Online</span>
+      </div>
+
+      <button id="userProfileBtn" class="user-role-pill" title="Switch User Accessibility Profile">
+        <div class="avatar-ring">
+          <i class="fa-solid fa-user-gear" id="userRoleIcon"></i>
+        </div>
+        <span id="userRoleName">Deaf Mode</span>
+      </button>
+
+      <button id="settingsToggleBtn" class="icon-btn" title="Settings">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <main class="main-content">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: DUAL TWO-WAY CONVERSATION ROOM                                     -->
+    <!-- ========================================================================= -->
+    <section id="tab-dual-room" class="app-tab active">
+      <div class="dual-room-grid">
+        
+        <!-- Left Stream: Deaf / Mute User (Sign to Speech) -->
+        <div class="dual-stream-card signer-card">
+          <div class="card-header">
+            <div class="stream-badge deaf-tag">
+              <i class="fa-solid fa-hands"></i> Deaf/Mute Signer
+            </div>
+            <div class="stream-controls">
+              <button id="dualCameraToggle" class="ctrl-btn active" title="Toggle Webcam">
+                <i class="fa-solid fa-video"></i>
+              </button>
+              <button id="dualAutoTtsToggle" class="ctrl-btn active" title="Auto-Speak Detected Signs">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="video-feed-container">
+            <video id="dualVideoElement" playsinline muted autoplay></video>
+            <canvas id="dualCanvasOverlay"></canvas>
+            
+            <div class="hud-overlay">
+              <div class="hud-top">
+                <span class="hud-tag" id="dualTrackingStatus"><i class="fa-solid fa-circle-notch fa-spin"></i> Camera Idle</span>
+                <span class="hud-fps" id="dualFpsMeter">30 FPS</span>
+              </div>
+              <div class="hud-bottom">
+                <div class="confidence-bar-wrap">
+                  <div class="confidence-fill" id="dualConfidenceFill" style="width: 85%;"></div>
+                </div>
+                <div class="live-gloss-badge" id="dualLiveSignBadge">
+                  <span class="sign-label">DETECTED SIGN</span>
+                  <span class="sign-text" id="dualCurrentSign">WAITING...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stream-footer">
+            <div class="translation-output-box">
+              <span class="sub-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Formulated Speech Translation:</span>
+              <p class="translated-sentence" id="dualSignerSentence">"Hello! Good morning. I am communicating via Indian Sign Language."</p>
+            </div>
+            <div class="footer-actions">
+              <button id="dualSignerSpeakBtn" class="btn-primary-sm">
+                <i class="fa-solid fa-volume-high"></i> Replay Voice
+              </button>
+              <button id="dualSignerSimulateBtn" class="btn-secondary-sm" title="Simulate Sign Input">
+                <i class="fa-solid fa-bolt"></i> Sample Sign
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center: Live Two-Way Conversation Transcript -->
+        <div class="dual-chat-card">
+          <div class="chat-header">
+            <div class="title-wrap">
+              <i class="fa-solid fa-comments"></i>
+              <h3>Live Two-Way Transcript</h3>
+            </div>
+            <button id="clearChatBtn" class="clear-btn" title="Clear Chat History">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+
+          <div class="chat-messages-scroll" id="dualChatMessages">
+            <div class="chat-bubble left-bubble">
+              <div class="bubble-header">
+                <span class="bubble-speaker"><i class="fa-solid fa-hands"></i> Deaf Signer</span>
+                <span class="bubble-time">12:00 PM</span>
+              </div>
+              <div class="bubble-body">
+                <p>Hello! Welcome to our meeting. Nice to meet you.</p>
+                <div class="bubble-tokens">
+                  <span class="token-pill">HELLO</span>
+                  <span class="token-pill">WELCOME</span>
+                  <span class="token-pill">MEET</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="chat-bubble right-bubble">
+              <div class="bubble-header">
+                <span class="bubble-speaker"><i class="fa-solid fa-microphone"></i> Hearing Companion</span>
+                <span class="bubble-time">12:01 PM</span>
+              </div>
+              <div class="bubble-body">
+                <p>Good morning! Very happy to communicate with you.</p>
+                <div class="bubble-tokens">
+                  <span class="token-pill avatar-trigger" data-sign="GOOD">GOOD</span>
+                  <span class="token-pill avatar-trigger" data-sign="MORNING">MORNING</span>
+                  <span class="token-pill avatar-trigger" data-sign="HAPPY">HAPPY</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick SOS & Emergency Chips -->
+          <div class="quick-chips-row">
+            <button class="sos-chip" data-phrase="PLEASE HELP"><i class="fa-solid fa-triangle-exclamation"></i> HELP</button>
+            <button class="sos-chip" data-phrase="WATER"><i class="fa-solid fa-droplet"></i> WATER</button>
+            <button class="sos-chip" data-phrase="DOCTOR"><i class="fa-solid fa-user-doctor"></i> DOCTOR</button>
+            <button class="sos-chip" data-phrase="THANK YOU"><i class="fa-solid fa-heart"></i> THANKS</button>
+          </div>
+        </div>
+
+        <!-- Right Stream: Hearing Companion (Voice to Avatar) -->
+        <div class="dual-stream-card avatar-card">
+          <div class="card-header">
+            <div class="stream-badge hearing-tag">
+              <i class="fa-solid fa-microphone-lines"></i> Hearing Companion
+            </div>
+            <div class="stream-controls">
+              <button id="dualMicToggle" class="ctrl-btn active" title="Toggle Microphone">
+                <i class="fa-solid fa-microphone"></i>
+              </button>
+              <button id="dualAvatarReplay" class="ctrl-btn" title="Replay Avatar Animation">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 3D/2D Avatar Canvas Viewport -->
+          <div class="avatar-canvas-container">
+            <canvas id="dualAvatarCanvas"></canvas>
+            
+            <div class="avatar-hud">
+              <span class="avatar-tag" id="dualAvatarState"><i class="fa-solid fa-robot"></i> Avatar Ready</span>
+              <div class="avatar-speed-badge">
+                <span>Speed:</span>
+                <button class="speed-btn active" data-speed="1.0">1x</button>
+                <button class="speed-btn" data-speed="0.75">0.75x</button>
+              </div>
+            </div>
+
+            <div class="avatar-gloss-tracker" id="dualAvatarGlossSequence">
+              <!-- Animated sequence pills -->
+              <span class="gloss-seq-pill active">HELLO</span>
+              <span class="gloss-seq-pill">GOOD</span>
+              <span class="gloss-seq-pill">MORNING</span>
+            </div>
+          </div>
+
+          <div class="stream-footer">
+            <div class="voice-input-container">
+              <input type="text" id="dualTextInput" placeholder="Type or speak a message to sign..." class="input-modern">
+              <button id="dualSendTextBtn" class="btn-send"><i class="fa-solid fa-paper-plane"></i></button>
+              <button id="dualRecordVoiceBtn" class="btn-mic-pulse" title="Click to Speak"><i class="fa-solid fa-microphone"></i></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: SIGNER STUDIO (GESTURE TO SPEECH / TEXT)                           -->
+    <!-- ========================================================================= -->
+    <section id="tab-signer-studio" class="app-tab">
+      <div class="studio-grid">
+        
+        <!-- Left: Full Camera Feed with MediaPipe Landmarks -->
+        <div class="camera-stage-card">
+          <div class="stage-header">
+            <div class="stage-title">
+              <i class="fa-solid fa-camera"></i>
+              <h3>Real-Time ISL Gesture Recognition</h3>
+            </div>
+            <div class="stage-actions">
+              <button id="cameraStartBtn" class="btn-glow-green"><i class="fa-solid fa-play"></i> Start Camera</button>
+              <button id="skeletonOverlayToggle" class="ctrl-btn active" title="Toggle Tracking Skeleton"><i class="fa-solid fa-bone"></i></button>
+            </div>
+          </div>
+
+          <div class="stage-viewport">
+            <video id="studioVideo" playsinline muted autoplay></video>
+            <canvas id="studioCanvas"></canvas>
+            
+            <div class="viewport-hud-top">
+              <div class="hud-pill"><i class="fa-solid fa-microchip"></i> CNN-LSTM & FER Ready</div>
+              <div class="hud-pill fps-counter" id="studioFps">30 FPS</div>
+            </div>
+
+            <!-- Real-time Sequence Buffer Bar -->
+            <div class="buffer-bar-wrapper">
+              <div class="buffer-info">
+                <span>Sequence Buffer (30 Frames)</span>
+                <span id="bufferCountText">0 / 30</span>
+              </div>
+              <div class="buffer-track">
+                <div class="buffer-progress" id="bufferProgressBar"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-controls-bar">
+            <button id="sampleGestureBtn" class="btn-secondary-sm"><i class="fa-solid fa-wand-magic-sparkles"></i> Test Sample Sequence</button>
+            <button id="clearBufferBtn" class="btn-secondary-sm"><i class="fa-solid fa-eraser"></i> Flush Sequence</button>
+            <label class="toggle-switch-label">
+              <input type="checkbox" id="autoSpeechToggle" checked>
+              <span class="toggle-slider"></span>
+              <span>Auto-Speak Sentence</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Right: Recognition Analytics & Transformer NLP Output -->
+        <div class="analytics-card">
+          <div class="analytics-section">
+            <h4 class="section-heading"><i class="fa-solid fa-crosshairs"></i> Top Recognized ISL Sign</h4>
+            <div class="primary-sign-display">
+              <div class="sign-icon-ring">
+                <i class="fa-solid fa-hand-peace" id="primarySignIcon"></i>
+              </div>
+              <div class="sign-details">
+                <h2 id="studioPrimarySign">HELLO</h2>
+                <div class="sign-prob-bar">
+                  <div class="sign-prob-fill" id="studioPrimaryConfidence" style="width: 94%;"></div>
+                </div>
+                <span class="confidence-text" id="studioConfidenceLabel">94% Neural Confidence</span>
+              </div>
+            </div>
+
+            <!-- Top 5 Candidate Probabilities -->
+            <div class="candidate-list" id="candidateProbabilities">
+              <div class="candidate-row">
+                <span class="cand-name">HELLO</span>
+                <div class="cand-bar-wrap"><div class="cand-bar-fill" style="width: 94%;"></div></div>
+                <span class="cand-val">0.94</span>
+              </div>
+              <div class="candidate-row">
+                <span class="cand-name">GOOD</span>
+                <div class="cand-bar-wrap"><div class="cand-bar-fill" style="width: 4%;"></div></div>
+                <span class="cand-val">0.04</span>
+              </div>
+              <div class="candidate-row">
+                <span class="cand-name">WATER</span>
+                <div class="cand-bar-wrap"><div class="cand-bar-fill" style="width: 2%;"></div></div>
+                <span class="cand-val">0.02</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Non-Manual Facial Expression Tag -->
+          <div class="analytics-section">
+            <h4 class="section-heading"><i class="fa-solid fa-face-smile"></i> Facial Expression & Grammar</h4>
+            <div class="emotion-tag-row">
+              <span class="emotion-chip active" id="emotionHappy"><i class="fa-solid fa-face-smile"></i> Happy / Affirmative</span>
+              <span class="emotion-chip" id="emotionInquiring"><i class="fa-solid fa-face-flushed"></i> Inquiring (Question)</span>
+              <span class="emotion-chip" id="emotionNeutral"><i class="fa-solid fa-face-meh"></i> Neutral</span>
+            </div>
+          </div>
+
+          <!-- Transformer NLP Sentence Formulation -->
+          <div class="analytics-section">
+            <h4 class="section-heading"><i class="fa-solid fa-language"></i> Natural Spoken Sentence</h4>
+            <div class="nlp-output-card">
+              <div class="gloss-row">
+                <span class="gloss-lbl">Raw Gloss:</span>
+                <div class="gloss-tags-container" id="studioGlossTokens">
+                  <span class="token-pill">HELLO</span>
+                  <span class="token-pill">WATER</span>
+                  <span class="token-pill">PLEASE</span>
+                </div>
+              </div>
+              <div class="natural-sentence-box">
+                <p id="studioFormulatedSentence">"Hello! Could you please give me some water?"</p>
+              </div>
+              <div class="nlp-actions">
+                <button id="studioSpeakSentenceBtn" class="btn-primary"><i class="fa-solid fa-volume-high"></i> Speak Spoken Voice</button>
+                <button id="copySentenceBtn" class="btn-secondary"><i class="fa-solid fa-copy"></i> Copy</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: AVATAR STUDIO (SPEECH / TEXT TO 3D SIGN AVATAR)                    -->
+    <!-- ========================================================================= -->
+    <section id="tab-avatar-studio" class="app-tab">
+      <div class="avatar-studio-layout">
+        
+        <!-- Left: Interactive Avatar Stage -->
+        <div class="avatar-main-stage">
+          <div class="stage-header">
+            <div class="stage-title">
+              <i class="fa-solid fa-person-burst"></i>
+              <h3>Articulated ISL Sign Avatar</h3>
+            </div>
+            <div class="avatar-view-options">
+              <button class="skin-btn active" data-skin="humanoid"><i class="fa-solid fa-user"></i> Realistic</button>
+              <button class="skin-btn" data-skin="cyber"><i class="fa-solid fa-robot"></i> Cyber Mesh</button>
+              <button class="skin-btn" data-skin="skeleton"><i class="fa-solid fa-diagram-project"></i> Kinematic Bones</button>
+            </div>
+          </div>
+
+          <!-- Main Interactive Canvas -->
+          <div class="avatar-render-viewport">
+            <canvas id="studioAvatarCanvas"></canvas>
+
+            <!-- Floating Playback Bar -->
+            <div class="avatar-playback-bar">
+              <button id="avatarPlayPauseBtn" class="playback-btn" title="Play / Pause"><i class="fa-solid fa-play"></i></button>
+              <button id="avatarRestartBtn" class="playback-btn" title="Restart Sign"><i class="fa-solid fa-rotate-left"></i></button>
+              
+              <div class="timeline-slider-wrap">
+                <span class="time-text" id="avatarTimeDisplay">00:00 / 00:02</span>
+                <input type="range" id="avatarTimelineSlider" min="0" max="100" value="0" class="range-slider">
+              </div>
+
+              <div class="playback-speed-select">
+                <label>Speed:</label>
+                <select id="avatarStudioSpeed">
+                  <option value="0.5">0.5x (Slow)</option>
+                  <option value="0.75">0.75x</option>
+                  <option value="1.0" selected>1.0x (Normal)</option>
+                  <option value="1.5">1.5x (Fast)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Sequence Breakdown -->
+          <div class="sequence-strip-card">
+            <div class="strip-header">
+              <span>Signing Sequence (ISL Gloss Decomposition):</span>
+              <span id="currentSigningWordBadge" class="badge-active-word">WORD: HELLO</span>
+            </div>
+            <div class="sequence-chips-container" id="studioSequenceChips">
+              <!-- Dynamically populated -->
+              <div class="seq-chip active"><span class="chip-idx">1</span><span class="chip-word">HELLO</span></div>
+              <div class="seq-chip"><span class="chip-idx">2</span><span class="chip-word">HOW</span></div>
+              <div class="seq-chip"><span class="chip-idx">3</span><span class="chip-word">ARE</span></div>
+              <div class="seq-chip"><span class="chip-idx">4</span><span class="chip-word">YOU</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Input & Controls Panel -->
+        <div class="avatar-controls-panel">
+          
+          <!-- Voice Dictation Card -->
+          <div class="panel-section voice-card">
+            <h4 class="section-heading"><i class="fa-solid fa-microphone"></i> Voice Speech Input</h4>
+            <p class="section-hint">Speak clearly in English or regional tongue. The engine translates your voice to ISL syntax and triggers the avatar.</p>
+            
+            <div class="voice-mic-center">
+              <button id="voiceRecordButton" class="mic-orb-btn">
+                <i class="fa-solid fa-microphone"></i>
+              </button>
+              <span class="mic-status-label" id="micStatusLabel">Click to Start Speaking</span>
+            </div>
+
+            <!-- Audio Waveform Visualizer -->
+            <div class="audio-wave-wrap" id="audioWaveWrap">
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+            </div>
+          </div>
+
+          <!-- Text Input Form -->
+          <div class="panel-section">
+            <h4 class="section-heading"><i class="fa-solid fa-keyboard"></i> Text Translation</h4>
+            <div class="text-input-group">
+              <textarea id="avatarTextInput" class="textarea-modern" rows="3" placeholder="Type a sentence (e.g. 'Can you please help me find the hospital?')..."></textarea>
+              <button id="avatarTranslateBtn" class="btn-primary w-full"><i class="fa-solid fa-person-walking-arrow-right"></i> Translate to ISL Sign</button>
+            </div>
+          </div>
+
+          <!-- Quick Common Phrases -->
+          <div class="panel-section">
+            <h4 class="section-heading"><i class="fa-solid fa-bolt"></i> Quick Conversation Phrases</h4>
+            <div class="quick-phrases-grid">
+              <button class="phrase-pill" data-phrase="Hello, nice to meet you">👋 "Hello, nice to meet you"</button>
+              <button class="phrase-pill" data-phrase="Thank you very much">🙏 "Thank you very much"</button>
+              <button class="phrase-pill" data-phrase="Where is the water?">💧 "Where is the water?"</button>
+              <button class="phrase-pill" data-phrase="Please help me">🚨 "Please help me"</button>
+              <button class="phrase-pill" data-phrase="What time is it?">⏰ "What time is it?"</button>
+              <button class="phrase-pill" data-phrase="Good morning, have a nice day">☀️ "Good morning"</button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: ISL DICTIONARY & INTERACTIVE PRACTICE HUB                          -->
+    <!-- ========================================================================= -->
+    <section id="tab-dictionary-hub" class="app-tab">
+      <div class="dictionary-layout">
+        
+        <!-- Header & Category Filter Bar -->
+        <div class="dictionary-header-card">
+          <div class="dict-title-wrap">
+            <div class="dict-icon"><i class="fa-solid fa-book-open"></i></div>
+            <div>
+              <h3>Indian Sign Language Visual Library</h3>
+              <p>Explore 100+ signs, alphabets, and numbers with interactive 3D demonstration & camera practice.</p>
+            </div>
+          </div>
+
+          <!-- Search & Filters -->
+          <div class="dict-search-bar">
+            <div class="search-input-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="dictSearchInput" placeholder="Search signs by word (e.g. 'Water', 'A', 'Doctor', 'Hospital')...">
+            </div>
+            <div class="category-pills-row" id="dictCategoryFilters">
+              <button class="cat-pill active" data-cat="all">All Signs</button>
+              <button class="cat-pill" data-cat="alphabet">🔤 Alphabets (A-Z)</button>
+              <button class="cat-pill" data-cat="numbers">🔢 Numbers (0-9)</button>
+              <button class="cat-pill" data-cat="greetings">👋 Greetings</button>
+              <button class="cat-pill" data-cat="emergency">🚨 Emergency</button>
+              <button class="cat-pill" data-cat="emotions">😊 Emotions</button>
+              <button class="cat-pill" data-cat="calendar">📅 Time & Days</button>
+              <button class="cat-pill" data-cat="vocabulary">📚 Vocabulary</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Body: Catalog Grid + Live Interactive Preview & Practice Window -->
+        <div class="dict-content-grid">
+          
+          <!-- Sign Catalog Cards -->
+          <div class="signs-grid-container" id="signsCatalogGrid">
+            <!-- Dynamically populated with cards -->
+          </div>
+
+          <!-- Side Preview & Webcam Practice Hub -->
+          <div class="dict-preview-sidebar">
+            <div class="preview-card-sticky">
+              <div class="preview-header">
+                <span class="badge-preview">ACTIVE SIGN PREVIEW</span>
+                <h3 id="dictPreviewWord">HELLO</h3>
+              </div>
+
+              <div class="dict-avatar-canvas-wrap">
+                <canvas id="dictAvatarCanvas"></canvas>
+                <div class="dict-canvas-controls">
+                  <button id="dictReplayBtn" class="btn-icon-sm" title="Replay Animation"><i class="fa-solid fa-rotate-left"></i></button>
+                  <button id="dictSpeedToggle" class="btn-icon-sm">1.0x</button>
+                </div>
+              </div>
+
+              <div class="sign-description-box">
+                <span class="desc-label">Execution Instructions:</span>
+                <p id="dictSignDescription">Raise dominant hand near the temple with palm open and move outward gently with a pleasant facial expression.</p>
+              </div>
+
+              <div class="practice-box">
+                <h4 class="practice-title"><i class="fa-solid fa-bullseye"></i> Practice with Your Camera</h4>
+                <p class="practice-desc">Sign in front of your camera and get AI accuracy verification.</p>
+                <button id="startPracticeBtn" class="btn-glow-cyan w-full"><i class="fa-solid fa-camera"></i> Test My Sign</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: SIGN-IN & ACCESSIBILITY ONBOARDING PROFILE SETUP                   -->
+  <!-- ========================================================================= -->
+  <div class="modal-backdrop" id="onboardingModal">
+    <div class="modal-card">
+      <div class="modal-banner">
+        <div class="banner-icon">
+          <i class="fa-solid fa-hands-holding-circle"></i>
+        </div>
+        <h2>Welcome to ISL Sync</h2>
+        <p>Personalize your experience for seamless two-way communication.</p>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Select Your Communication Profile:</label>
+          <div class="role-selection-grid">
+            
+            <!-- Option 1: Deaf / Mute -->
+            <div class="role-card active" data-role="deaf">
+              <div class="role-icon deaf-icon">
+                <i class="fa-solid fa-hands"></i>
+              </div>
+              <div class="role-info">
+                <h4>Deaf / Hard of Hearing</h4>
+                <p>Camera-first gesture translation, large visual captions, auto-speaking voice for others.</p>
+              </div>
+              <div class="role-check"><i class="fa-solid fa-check"></i></div>
+            </div>
+
+            <!-- Option 2: Hearing / Speaking -->
+            <div class="role-card" data-role="hearing">
+              <div class="role-icon hearing-icon">
+                <i class="fa-solid fa-headset"></i>
+              </div>
+              <div class="role-info">
+                <h4>Hearing / Speaking</h4>
+                <p>Mic-first speech translation to 3D Sign Avatar and visual subtitle cards.</p>
+              </div>
+              <div class="role-check"><i class="fa-solid fa-check"></i></div>
+            </div>
+
+            <!-- Option 3: Dual Mode -->
+            <div class="role-card" data-role="dual">
+              <div class="role-icon dual-icon">
+                <i class="fa-solid fa-people-arrows"></i>
+              </div>
+              <div class="role-info">
+                <h4>Two-Way Live Room</h4>
+                <p>Simultaneous split-screen communication for face-to-face interaction.</p>
+              </div>
+              <div class="role-check"><i class="fa-solid fa-check"></i></div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label">Your Name / Alias:</label>
+            <input type="text" id="onboardingUserName" class="input-modern" value="User" placeholder="Enter your name">
+          </div>
+          <div class="form-group flex-1">
+            <label class="form-label">Regional ISL Dialect:</label>
+            <select id="onboardingDialect" class="select-modern">
+              <option value="generic">ISL Generic (Standard)</option>
+              <option value="south">South Indian ISL</option>
+              <option value="north">North Indian ISL</option>
+              <option value="maharashtra">Maharashtra ISL</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="completeOnboardingBtn" class="btn-primary w-full">
+          <span>Start Communicating</span> <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: SETTINGS & PREFERENCES                                             -->
+  <!-- ========================================================================= -->
+  <div class="modal-backdrop hidden" id="settingsModal">
+    <div class="modal-card small-modal">
+      <div class="modal-header-simple">
+        <h3><i class="fa-solid fa-sliders"></i> System Settings</h3>
+        <button id="closeSettingsBtn" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label>Auto-Speak Recognized Sentences</label>
+            <p>Automatically triggers Text-to-Speech when a sign sentence finishes.</p>
+          </div>
+          <label class="toggle-switch-label">
+            <input type="checkbox" id="settingAutoTts" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label>Speech Output Speed</label>
+            <p>Adjust Voice Pitch and Rate.</p>
+          </div>
+          <input type="range" id="settingTtsRate" min="0.7" max="1.5" step="0.1" value="1.0" class="range-slider">
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label>Show Skeleton Landmarks</label>
+            <p>Display glowing hand and face landmarks on camera feed.</p>
+          </div>
+          <label class="toggle-switch-label">
+            <input type="checkbox" id="settingShowSkeleton" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label>Dark / Cyber Theme</label>
+            <p>Toggle high-contrast dark aesthetic.</p>
+          </div>
+          <label class="toggle-switch-label">
+            <input type="checkbox" id="settingDarkTheme" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button id="saveSettingsBtn" class="btn-primary w-full">Save Preferences</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/avatar_engine.js"></script>
+  <script src="/static/js/speech_engine.js"></script>
+  <script src="/static/js/camera_pipeline.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

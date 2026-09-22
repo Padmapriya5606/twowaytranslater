@@ -1,0 +1,9 @@
+{
+  "WATER": "assets/signs/generic/water.json",
+  "HELLO": "assets/signs/generic/hello.json",
+  "SCHOOL": "assets/signs/generic/school.json",
+  "DOCTOR": "assets/signs/generic/doctor.json",
+  "HELP": "assets/signs/generic/help.json",
+  "YES": "assets/signs/generic/yes.json",
+  "NO": "assets/signs/generic/no.json"
+}

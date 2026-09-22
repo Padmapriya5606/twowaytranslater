@@ -1,0 +1,29 @@
+# Core ML
+tensorflow>=2.15,<2.17
+numpy>=1.24
+scikit-learn>=1.3
+
+# Vision / landmarks
+mediapipe==0.10.9    # pinned: 0.10.10+ breaks the legacy mp.solutions.holistic API used here
+opencv-python>=4.9
+
+# NLP (transformer sentence correction)
+transformers>=4.38
+datasets>=2.18       # HF Trainer dataset wrapper, used by train_transformer_nlp.py
+torch>=2.2          # backend for transformers; swap for tf-only if preferred
+sentencepiece
+sacremoses
+
+# Speech
+pyttsx3>=2.90        # offline TTS for the Python-side demo
+SpeechRecognition>=3.10
+pyaudio>=0.2.13       # mic input for SpeechRecognition (may need portaudio dev headers)
+
+# Avatar rendering (2D skeleton demo)
+matplotlib>=3.8
+pygame>=2.5
+
+# Utilities
+tqdm>=4.66
+pandas>=2.2
+pyyaml>=6.0

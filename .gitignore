@@ -1,0 +1,49 @@
+# Python & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Large Raw & Processed Datasets (Numpy arrays, videos)
+data/raw/
+data/processed/
+*.npy
+*.mp4
+*.avi
+*.mov
+
+# Checkpoints > 100MB (GitHub file limit)
+*.safetensors
+*.bin
+*.pt
+checkpoints/transformer_nlp/checkpoint-*/
+
+# Log files
+*.log

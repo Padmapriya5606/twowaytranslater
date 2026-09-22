@@ -1,0 +1,2 @@
+rootProject.name = "ISL Two-Way Translator"
+include ':app'

@@ -1,0 +1,144 @@
+{
+  "word": "water",
+  "region": "generic",
+  "frames": [
+    {
+      "head": [
+        0.5,
+        0.15
+      ],
+      "neck": [
+        0.5,
+        0.25
+      ],
+      "torso": [
+        0.5,
+        0.55
+      ],
+      "left_shoulder": [
+        0.4,
+        0.28
+      ],
+      "right_shoulder": [
+        0.6,
+        0.28
+      ],
+      "left_elbow": [
+        0.32,
+        0.4
+      ],
+      "right_elbow": [
+        0.68,
+        0.4
+      ],
+      "left_wrist": [
+        0.3,
+        0.55
+      ],
+      "right_wrist": [
+        0.7,
+        0.55
+      ],
+      "left_hand": [
+        0.28,
+        0.6
+      ],
+      "right_hand": [
+        0.55,
+        0.3
+      ]
+    },
+    {
+      "head": [
+        0.5,
+        0.15
+      ],
+      "neck": [
+        0.5,
+        0.25
+      ],
+      "torso": [
+        0.5,
+        0.55
+      ],
+      "left_shoulder": [
+        0.4,
+        0.28
+      ],
+      "right_shoulder": [
+        0.6,
+        0.28
+      ],
+      "left_elbow": [
+        0.32,
+        0.4
+      ],
+      "right_elbow": [
+        0.68,
+        0.4
+      ],
+      "left_wrist": [
+        0.3,
+        0.55
+      ],
+      "right_wrist": [
+        0.7,
+        0.55
+      ],
+      "left_hand": [
+        0.28,
+        0.6
+      ],
+      "right_hand": [
+        0.55,
+        0.4
+      ]
+    },
+    {
+      "head": [
+        0.5,
+        0.15
+      ],
+      "neck": [
+        0.5,
+        0.25
+      ],
+      "torso": [
+        0.5,
+        0.55
+      ],
+      "left_shoulder": [
+        0.4,
+        0.28
+      ],
+      "right_shoulder": [
+        0.6,
+        0.28
+      ],
+      "left_elbow": [
+        0.32,
+        0.4
+      ],
+      "right_elbow": [
+        0.68,
+        0.4
+      ],
+      "left_wrist": [
+        0.3,
+        0.55
+      ],
+      "right_wrist": [
+        0.7,
+        0.55
+      ],
+      "left_hand": [
+        0.28,
+        0.6
+      ],
+      "right_hand": [
+        0.55,
+        0.4
+      ]
+    }
+  ]
+}
