@@ -16,9 +16,12 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 import numpy as np
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-sys.path.append(str(PROJECT_ROOT))
-sys.path.append(str(PROJECT_ROOT / "src"))
+CURRENT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = CURRENT_DIR.parent.parent if CURRENT_DIR.name == "backend" else CURRENT_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+if str(PROJECT_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from avatar.avatar_vocabulary import ISL_VOCAB_DB, SYNONYMS, get_sign_data
 from regional_dialect.dialect_selector import DialectSelector

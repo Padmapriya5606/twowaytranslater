@@ -1,9 +1,9 @@
-# Multi-stage / optimized Dockerfile for ISL Two-Way Translator
 FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONPATH="/app:/app/src" \
     PORT=8000 \
     HOST=0.0.0.0
 
@@ -26,8 +26,7 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir uvicorn fastapi pydantic
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
 COPY . .
@@ -35,9 +34,5 @@ COPY . .
 # Expose server port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
 # Command to run the application
-CMD ["python", "src/backend/app.py"]
+CMD ["python", "run_app.py"]

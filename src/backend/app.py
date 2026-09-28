@@ -21,9 +21,12 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
 # Add project root and src to path
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-sys.path.append(str(PROJECT_ROOT))
-sys.path.append(str(PROJECT_ROOT / "src"))
+CURRENT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = CURRENT_DIR.parent.parent if CURRENT_DIR.name == "backend" else CURRENT_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+if str(PROJECT_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from backend.model_service import ModelService
 from avatar.avatar_vocabulary import ISL_VOCAB_DB, get_sign_data
@@ -148,7 +151,8 @@ if FRONTEND_DIR.exists():
 if __name__ == "__main__":
     import uvicorn
     host = os.environ.get("HOST", "0.0.0.0")
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", os.environ.get("RAILWAY_PORT", 8000)))
     print(f"[Server] Starting ISL Two-Way Translator on http://{host}:{port} ...")
-    uvicorn.run("backend.app:app", host=host, port=port, reload=False)
+    uvicorn.run(app, host=host, port=port, reload=False)
+
 
