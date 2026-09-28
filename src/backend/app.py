@@ -64,6 +64,18 @@ class FacePredictionRequest(BaseModel):
     landmarks: Optional[List[float]] = None
 
 # API Endpoints
+@app.get("/health")
+@app.get("/healthz")
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint for Docker container, load balancers, and cloud monitoring."""
+    return {
+        "status": "healthy",
+        "service": "isl-two-way-translator",
+        "models": model_service.models_loaded,
+        "vocab_count": len(ISL_VOCAB_DB)
+    }
+
 @app.get("/api/status")
 async def get_status():
     """Returns system status, loaded neural checkpoints, and active vocab count."""
@@ -135,5 +147,8 @@ if FRONTEND_DIR.exists():
 
 if __name__ == "__main__":
     import uvicorn
-    print("[Server] Starting ISL Two-Way Translator on http://localhost:8000 ...")
-    uvicorn.run("backend.app:app", host="0.0.0.0", port=8000, reload=True)
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", 8000))
+    print(f"[Server] Starting ISL Two-Way Translator on http://{host}:{port} ...")
+    uvicorn.run("backend.app:app", host=host, port=port, reload=False)
+
